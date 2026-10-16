@@ -6,5 +6,4 @@ compatibility_date = "2025-09-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "takeanumber-scores"
-# Replace with the id printed by `npx wrangler d1 create takeanumber-scores` (local testing works without it).
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "88a8a0b5-a371-4814-9dce-33fd3b5991d7"
