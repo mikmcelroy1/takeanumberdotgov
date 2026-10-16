@@ -1,19 +1,28 @@
 // Sends game events to Mixpanel (project "take-a-number").
 // - The Mixpanel library is served from this site (js/vendor/), and events go to /mp on this site,
 //   which src/index.js forwards to Mixpanel. Ad blockers block Mixpanel's own addresses, not ours.
-// - Nothing is sent from localhost unless the address has ?track=1; then events are tagged env=local.
+// - Events are only sent from LIVE_HOST, so copies of this code running anywhere else send nothing.
+//   For testing on localhost, add ?track=1 to the address; those events are tagged env=local.
 // - The project token below is meant to be public: it can add events, but cannot read or delete data.
 // - Never send anything the player typed. Send level names, times, and the plain mistake reasons.
 // Event list and the meaning of every mistake code: README.md, "Analytics".
 const MIXPANEL_TOKEN = '603f7c2a604772853ef951a1937a43b2';
 const MIXPANEL_LIB = '/js/vendor/mixpanel-2.84.0.min.js';
+const LIVE_HOST = 'takeanumberdotgov.com';
+
+// 'live', 'local', or null for "send nothing".
+function trackingEnv(hostname, search) {
+  if (hostname === LIVE_HOST) return 'live';
+  const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(hostname);
+  return local && new URLSearchParams(search).get('track') === '1' ? 'local' : null;
+}
 
 const Analytics = {
   enabled: false,
 
   init() {
-    const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-    if (local && new URLSearchParams(location.search).get('track') !== '1') return;
+    const env = trackingEnv(location.hostname, location.search);
+    if (!env) return;
     this.enabled = true;
 
     // Mixpanel's official loader snippet (from mixpanel-browser 2.84.0), pointed at our own copy.
@@ -29,7 +38,7 @@ const Analytics = {
       persistence: 'localStorage',
       track_pageview: false, // the game is one page; "Page Viewed" is sent for each game page instead
     });
-    mixpanel.register({ env: local ? 'local' : 'live' });
+    mixpanel.register({ env });
   },
 
   track(event, props = {}) {

@@ -48,6 +48,10 @@ Each level has a permanent short name. The number is its place in the load order
 | 4 | `address` | Mailing Address | `public/js/levels/address.js` |
 | 5 | `sticker` | City Vehicle Sticker | `public/js/levels/sticker.js` |
 
+## Leaderboard link
+
+The footer's **Fastest Times** link opens the top 10 in a pop-up box over the current page. During a run the clock keeps going while it is open. https://takeanumberdotgov.com/#fastest-times opens the box directly, for sharing.
+
 ## Testing one level
 
 Add `?level=` to the address to play only the levels you name, in that order. These runs are marked "practice" and their times are not saved to the leaderboard.
@@ -66,7 +70,7 @@ The new level is then in the random pool automatically.
 
 ## Analytics
 
-Events go to the Mixpanel project **take-a-number** (id 4074309). The browser loads Mixpanel's library from `public/js/vendor/` and sends events to `/mp/...` on this site, which `src/index.js` forwards to Mixpanel, so ad blockers don't drop them. Nothing is sent from localhost unless the address has `?track=1`; those events are tagged `env = local`, live ones `env = live`. Nothing the player types is ever sent.
+Events go to the Mixpanel project **take-a-number** (id 4074309). The browser loads Mixpanel's library from `public/js/vendor/` and sends events to `/mp/...` on this site, which `src/index.js` forwards to Mixpanel, so ad blockers don't drop them. Events are only sent from takeanumberdotgov.com (`LIVE_HOST` in `public/js/analytics.js`), so a copy of this code running anywhere else sends nothing. To test on localhost, add `?track=1` to the address; those events are tagged `env = local`, live ones `env = live`. Nothing the player types is ever sent.
 
 Every event carries Mixpanel's automatic details (browser, device, city and country, the page address, and any `utm_` tags such as `utm_medium=share`). Events during a run also carry `level`, `page_number`, `practice` and `seconds_on_page`.
 
@@ -81,6 +85,7 @@ Every event carries Mixpanel's automatic details (browser, device, city and coun
 | Standards PDF Closed | The address level's PDF is closed | `furthest_page`, `reached_suffix_table` |
 | Initials Submitted | The Board of Ethics review ends | `approved`, `reason` if denied |
 | Share Clicked | Share Score is pressed | `method` (`copy` or `share menu`), `completed` |
+| Leaderboard Viewed | The footer's Fastest Times link is pressed, or someone opens takeanumberdotgov.com/#fastest-times | `from` (`footer` or `link`), `in_run`, and where the player was if in a run |
 
 ### Mistakes
 

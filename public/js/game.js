@@ -111,11 +111,15 @@ const Game = {
       if (this.inRun()) Analytics.track('Run Abandoned', { ...this.where(), how: 'Restart button' });
       this.showSplash();
     });
-    document.querySelectorAll('.gov-nav a, .gov-footer a').forEach(a => a.addEventListener('click', e => {
+    document.querySelectorAll('.gov-nav a, .gov-footer a:not(#fastestLink)').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       alert('This page is temporarily unavailable. Please try again during regular business hours.');
     }));
     document.getElementById('crumbs').addEventListener('click', e => e.preventDefault());
+
+    // The footer's Fastest Times link, and takeanumberdotgov.com/#fastest-times, open the leaderboard.
+    document.getElementById('fastestLink').addEventListener('click', e => { e.preventDefault(); this.showFastest('footer'); });
+    if (location.hash === '#fastest-times') setTimeout(() => this.showFastest('link'), 0);
 
     // ?level=address, ?level=3 or ?level=pin,human plays just those levels, in that order, as a practice run.
     const chosen = this.fromParam(new URLSearchParams(location.search).get('level'));
@@ -129,6 +133,17 @@ const Game = {
     return value.split(',').map(v => v.trim().toLowerCase()).map(v =>
       /^\d+$/.test(v) ? this.levels[Number(v) - 1] : this.levels.find(l => l.id === v),
     ).filter(Boolean);
+  },
+
+  // Leaderboard in a pop-up box over the current page. During a run the clock keeps going.
+  showFastest(from) {
+    if (document.querySelector('.modal .board-slot')) return;
+    Analytics.track('Leaderboard Viewed', { from, in_run: this.inRun(), ...(this.inRun() ? this.where() : {}) });
+    history.replaceState(null, '', `${location.pathname}${location.search}#fastest-times`);
+    showDialog('Public Record: Fastest Times', '<div class="board-slot"></div>', ['Close']).then(() => {
+      history.replaceState(null, '', location.pathname + location.search);
+    });
+    Board.fill(document.querySelector('.modal .board-slot'));
   },
 
   // True while a run is being played (between Take a Number and the finish screen).
@@ -165,6 +180,7 @@ const Game = {
       .join(' &rsaquo; ');
     document.getElementById('notice').textContent = pick(NOTICES);
     document.querySelectorAll('.modal').forEach(m => m.remove());
+    if (location.hash === '#fastest-times') history.replaceState(null, '', location.pathname + location.search);
     window.scrollTo(0, 0);
   },
 
