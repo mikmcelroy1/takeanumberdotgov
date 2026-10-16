@@ -76,7 +76,7 @@ Every event carries Mixpanel's automatic details (browser, device, city and coun
 
 | Event | Sent when | Extra details |
 |---|---|---|
-| Page Viewed | Any page appears: the start screen, each level, the finish screen | `page` (`start`, a level name, or `finish`), `page_title` |
+| Page Viewed | Any page appears: the start screen, each level, the finish screen | `page` (`start`, a level name, or `finish`), `page_title`; on level pages also `level`, `page_number` |
 | Run Started | "Take a Number" is pressed, or a `?level=` test link opens | `levels` (in order), `practice` |
 | Page Completed | A page is accepted | where the player is (see above) |
 | Mistake Made | The player gets something wrong (table below) | `code`, `reason`, plus details per level |

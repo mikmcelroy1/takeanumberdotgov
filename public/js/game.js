@@ -229,7 +229,7 @@ const Game = {
     this.setChrome(`Page ${i + 1} of ${this.run.length}: ${level.title}${this.practice ? ' (practice)' : ''}`, level.crumbs);
     const page = document.getElementById('page');
     page.innerHTML = '';
-    Analytics.track('Page Viewed', { page: level.id, page_title: level.title, page_number: i + 1, practice: this.practice });
+    Analytics.track('Page Viewed', { page: level.id, level: level.id, page_title: level.title, page_number: i + 1, practice: this.practice });
     level.render(page, () => { if (run === this.runId && i === this.idx) this.complete(); });
   },
 
