@@ -42,7 +42,9 @@ const Finish = {
       || /Android|iPhone|iPad|iPod|Mobi/i.test(ua)
       || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPads report themselves as Macs
     if (isMobile && navigator.share) {
-      try { await navigator.share({ text }); } catch {} // closing the share sheet throws; nothing to do
+      let completed = true;
+      try { await navigator.share({ text }); } catch { completed = false; } // closing the share sheet throws
+      Analytics.track('Share Clicked', { method: 'share menu', completed, practice });
       return;
     }
     let copied = false;
@@ -55,6 +57,7 @@ const Finish = {
       try { copied = document.execCommand('copy'); } catch {}
       ta.remove();
     }
+    Analytics.track('Share Clicked', { method: 'copy', completed: copied, practice });
     btn.textContent = copied ? 'Copied to clipboard' : 'Could not copy';
     setTimeout(() => { btn.textContent = 'Share Score'; }, 2000);
   },
@@ -110,6 +113,7 @@ const Finish = {
         Board.add({ name, ms: Math.round(total), levels: Game.run.map(l => l.id).join(',') }),
         wait(1700),
       ]);
+      Analytics.track('Initials Submitted', { approved: !problem, reason: problem || null, total_seconds: Math.round(total / 100) / 10 });
       if (problem) {
         review.innerHTML = `<div class="errorbox">Denied. The Board of Ethics has rejected your initials.<br><span style="font-weight:normal">Reason given: ${esc(problem)}</span></div>`;
         return;

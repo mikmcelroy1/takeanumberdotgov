@@ -92,6 +92,7 @@ Game.register({
         `<p>You have selected a link to <b>${a.textContent}</b>.</p><p>Any information you have entered on this page will be lost. Do you wish to continue?</p>`,
         ['Continue', 'Cancel']);
       if (choice !== 'Continue') return;
+      Game.mistake('503-B', 'Followed a link, which unchecked the terms box', { link: a.textContent, box_was_checked: box.checked });
       box.checked = false;
       cont.disabled = true;
       await showDialog('Service Unavailable',

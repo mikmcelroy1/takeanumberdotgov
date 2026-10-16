@@ -107,7 +107,10 @@ const Game = {
   register(level) { this.levels.push(level); },
 
   boot() {
-    document.getElementById('restart').addEventListener('click', () => this.showSplash());
+    document.getElementById('restart').addEventListener('click', () => {
+      if (this.inRun()) Analytics.track('Run Abandoned', { ...this.where(), how: 'Restart button' });
+      this.showSplash();
+    });
     document.querySelectorAll('.gov-nav a, .gov-footer a').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       alert('This page is temporarily unavailable. Please try again during regular business hours.');
@@ -126,6 +129,26 @@ const Game = {
     return value.split(',').map(v => v.trim().toLowerCase()).map(v =>
       /^\d+$/.test(v) ? this.levels[Number(v) - 1] : this.levels.find(l => l.id === v),
     ).filter(Boolean);
+  },
+
+  // True while a run is being played (between Take a Number and the finish screen).
+  inRun() { return this.idx >= 0 && this.idx < this.run.length && this.timer !== null; },
+
+  // Properties that say where the player is, added to every event sent during a run.
+  where() {
+    const level = this.run[this.idx];
+    return {
+      level: level?.id,
+      page_number: this.idx + 1,
+      practice: this.practice,
+      seconds_on_page: Math.round((performance.now() - this.levelStart) / 100) / 10,
+    };
+  },
+
+  // Levels call this when the player gets something wrong. `code` is the error code the page
+  // shows (or null), `reason` is a plain description the player never sees. See README.md.
+  mistake(code, reason, details = {}) {
+    Analytics.track('Mistake Made', { ...this.where(), code, reason, ...details });
   },
 
   // Before You Begin, then RANDOM_LEVELS other levels in random order.
@@ -163,6 +186,7 @@ const Game = {
       </div>`;
     Board.fill(page.querySelector('.board-slot'));
     page.querySelector('#begin').addEventListener('click', () => this.start(this.newRun(), false));
+    Analytics.track('Page Viewed', { page: 'start', page_title: 'Start' });
   },
 
   start(levels, practice) {
@@ -175,6 +199,7 @@ const Game = {
     this.timer = setInterval(() => {
       document.getElementById('timer').textContent = fmt(performance.now() - this.runStart);
     }, 100);
+    Analytics.track('Run Started', { levels: levels.map(l => l.id), practice });
     this.goTo(0);
   },
 
@@ -188,19 +213,28 @@ const Game = {
     this.setChrome(`Page ${i + 1} of ${this.run.length}: ${level.title}${this.practice ? ' (practice)' : ''}`, level.crumbs);
     const page = document.getElementById('page');
     page.innerHTML = '';
+    Analytics.track('Page Viewed', { page: level.id, page_title: level.title, page_number: i + 1, practice: this.practice });
     level.render(page, () => { if (run === this.runId && i === this.idx) this.complete(); });
   },
 
   complete() {
     const now = performance.now();
     this.splits.push({ title: this.run[this.idx].title, ms: now - this.levelStart });
+    Analytics.track('Page Completed', this.where());
     if (this.idx + 1 < this.run.length) return this.goTo(this.idx + 1);
 
     this.stopTimer();
     this.runId++;
     const total = now - this.runStart;
     document.getElementById('timer').textContent = fmt(total);
+    Analytics.track('Run Finished', {
+      levels: this.run.map(l => l.id),
+      practice: this.practice,
+      total_seconds: Math.round(total / 100) / 10,
+      ...Object.fromEntries(this.run.map((l, i) => [`seconds_${l.id}`, Math.round(this.splits[i].ms / 100) / 10])),
+    });
     this.setChrome('Finished', ['Home', 'Online Services', 'Confirmation']);
+    Analytics.track('Page Viewed', { page: 'finish', page_title: 'Finish', practice: this.practice });
     Finish.render(document.getElementById('page'), total, this.splits, this.practice, () => this.showSplash());
   },
 };

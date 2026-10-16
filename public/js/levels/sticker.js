@@ -101,23 +101,44 @@ Game.register({
     const err = page.querySelector('#stkErr');
     const submit = page.querySelector('#stkSubmit');
 
-    // Returns the first problem only.
+    // Every error this form can show: [message the player sees, plain meaning sent to analytics].
+    // README.md has the same table.
+    const ERRORS = {
+      'E-101': ['License plate number is required.', 'Left the plate empty'],
+      'E-102': ['Invalid license plate format.', 'Typed the plate with a space or dash'],
+      'E-103': ['License plate not found in Secretary of State records.', 'Typed a plate that does not match the card'],
+      'E-401': ['Vehicle classification is required.', 'Did not pick a classification'],
+      'E-387': ['Vehicle weight is required.', 'Left the weight empty'],
+      'E-388': ['Vehicle weight does not match records on file.', 'Typed a weight that is not the curb weight'],
+      'E-411': ['Vehicle weight does not correspond to the selected classification.', 'Picked a classification other than P'],
+      'E-569': ['Please indicate whether you are applying for the Senior Citizen rate.', 'Did not answer the senior question'],
+      'E-570': ['Applicant does not meet age requirement.', 'Said yes to the senior rate (owner was born in 1979)'],
+      'E-639': ['Sticker period is required.', 'Did not pick a sticker period'],
+      'E-640': ['Applicant is not eligible for a prorated sticker.', 'Picked the 4-month prorated sticker'],
+      'E-641': ['This option has been discontinued.', 'Picked the discontinued 24-month sticker'],
+      'E-900': ['You must certify your residency.', 'Did not check the residency box'],
+    };
+
+    // Returns the first problem only: { code, details } or null.
     function firstError(f) {
       const p = (f.plate || '').trim().toUpperCase();
-      if (!p) return 'E-101: License plate number is required.';
-      if (/[\s-]/.test(p)) return 'E-102: Invalid license plate format.';
-      if (p !== plateNoSpace) return 'E-103: License plate not found in Secretary of State records.';
-      if (!f.cls) return 'E-401: Vehicle classification is required.';
+      if (!p) return { code: 'E-101' };
+      if (/[\s-]/.test(p)) return { code: 'E-102' };
+      if (p !== plateNoSpace) return { code: 'E-103' };
+      if (!f.cls) return { code: 'E-401' };
       const w = (f.weight || '').replace(/[,\s]|lbs?\.?/gi, '');
-      if (!w) return 'E-387: Vehicle weight is required.';
-      if (Number(w) !== curb) return 'E-388: Vehicle weight does not match records on file.';
-      if (f.cls !== 'P') return 'E-411: Vehicle weight does not correspond to the selected classification.';
-      if (!f.senior) return 'E-569: Please indicate whether you are applying for the Senior Citizen rate.';
-      if (f.senior === 'yes') return 'E-570: Applicant does not meet age requirement.';
-      if (!f.period) return 'E-639: Sticker period is required.';
-      if (f.period === '4') return 'E-640: Applicant is not eligible for a prorated sticker.';
-      if (f.period === '24') return 'E-641: This option has been discontinued.';
-      if (!f.certify) return 'E-900: You must certify your residency.';
+      if (!w) return { code: 'E-387' };
+      if (Number(w) !== curb) {
+        const typed = Number(w) === gvwr ? 'gross weight (GVWR)' : 'some other number';
+        return { code: 'E-388', reason: `Typed the ${typed} instead of the curb weight`, details: { weight_typed: typed } };
+      }
+      if (f.cls !== 'P') return { code: 'E-411', reason: `Picked classification ${f.cls} instead of P`, details: { class_picked: f.cls } };
+      if (!f.senior) return { code: 'E-569' };
+      if (f.senior === 'yes') return { code: 'E-570' };
+      if (!f.period) return { code: 'E-639' };
+      if (f.period === '4') return { code: 'E-640' };
+      if (f.period === '24') return { code: 'E-641' };
+      if (!f.certify) return { code: 'E-900' };
       return null;
     }
 
@@ -135,7 +156,9 @@ Game.register({
         done();
         return;
       }
-      err.innerHTML = `Please correct the following error before continuing:<br>${problem}<br><span style="font-weight:normal">Additional errors may exist.</span>`;
+      const [message, meaning] = ERRORS[problem.code];
+      Game.mistake(problem.code, problem.reason || meaning, problem.details || {});
+      err.innerHTML = `Please correct the following error before continuing:<br>${problem.code}: ${message}<br><span style="font-weight:normal">Additional errors may exist.</span>`;
       err.hidden = false;
       submit.disabled = false;
       submit.textContent = 'Continue to Payment';

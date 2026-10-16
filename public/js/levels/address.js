@@ -76,9 +76,25 @@ Game.register({
       submit.disabled = true;
       submit.innerHTML = '<span class="spinner"></span>Processing…';
       await wait(1500);
-      const ok = norm(f.num) === num && f.dir === dir && norm(f.street) === street.toUpperCase()
-        && norm(f.suffix) === 'AV' && normUnit(f.unit) === unit && f.zip.trim() === zip && f.county === 'COOK_CHI';
-      if (ok) {
+      const wrong = Object.entries({
+        house_number: norm(f.num) === num,
+        direction: f.dir === dir,
+        street_name: norm(f.street) === street.toUpperCase(),
+        suffix: norm(f.suffix) === 'AV',
+        unit: normUnit(f.unit) === unit,
+        zip: f.zip.trim() === zip,
+        county: f.county === 'COOK_CHI',
+      }).filter(([, right]) => !right).map(([field]) => field);
+      if (wrong.length) {
+        // What kind of suffix they typed, without sending the text itself.
+        const s = norm(f.suffix);
+        const suffixTyped = s === '' ? 'blank' : s === 'AVE' ? 'AVE' : s === 'AVENUE' ? 'AVENUE' : s === 'AV' ? 'AV' : 'other';
+        const reason = wrong.length === 1 && wrong[0] === 'suffix'
+          ? (suffixTyped === 'AVE' ? 'Typed AVE (the postal abbreviation) instead of AV' : `Suffix was ${suffixTyped}, not AV`)
+          : `Wrong or empty: ${wrong.join(', ')}`;
+        Game.mistake('ADR-22', reason, { wrong_fields: wrong, suffix_typed: suffixTyped, county_picked: f.county || 'none' });
+      }
+      if (!wrong.length) {
         const weeksOut = w => new Date(Date.now() + w * 7 * 864e5).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         form.outerHTML = `
           <div class="okbox">
@@ -126,7 +142,7 @@ function openStandards() {
     `<div class="center"><br><br><br><br><p><i>This page intentionally left blank.</i></p></div>`,
   ];
 
-  let n = 0;
+  let n = 0, furthest = 1;
   const modal = el(`
     <div class="modal">
       <div class="pdf">
@@ -148,6 +164,7 @@ function openStandards() {
 
   async function show(i) {
     n = i;
+    furthest = Math.max(furthest, n + 1);
     prev.disabled = next.disabled = true;
     count.textContent = `Page ${n + 1} of ${PAGES.length}`;
     body.innerHTML = '<p class="pdf-loading">Loading page…</p>';
@@ -159,6 +176,9 @@ function openStandards() {
   }
   prev.addEventListener('click', () => show(n - 1));
   next.addEventListener('click', () => show(n + 1));
-  modal.querySelector('.pdf-close').addEventListener('click', () => modal.remove());
+  modal.querySelector('.pdf-close').addEventListener('click', () => {
+    Analytics.track('Standards PDF Closed', { furthest_page: furthest, reached_suffix_table: furthest >= 11 });
+    modal.remove();
+  });
   show(0);
 }

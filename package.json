@@ -8,6 +8,7 @@
     "db:remote": "wrangler d1 execute takeanumber-scores --remote --file schema.sql"
   },
   "devDependencies": {
+    "mixpanel-browser": "^2.84.0",
     "wrangler": "^4.151.1"
   }
 }

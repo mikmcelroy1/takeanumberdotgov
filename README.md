@@ -64,6 +64,51 @@ Add `?level=` to the address to play only the levels you name, in that order. Th
 
 The new level is then in the random pool automatically.
 
+## Analytics
+
+Events go to the Mixpanel project **take-a-number** (id 4074309). The browser loads Mixpanel's library from `public/js/vendor/` and sends events to `/mp/...` on this site, which `src/index.js` forwards to Mixpanel, so ad blockers don't drop them. Nothing is sent from localhost unless the address has `?track=1`; those events are tagged `env = local`, live ones `env = live`. Nothing the player types is ever sent.
+
+Every event carries Mixpanel's automatic details (browser, device, city and country, the page address, and any `utm_` tags such as `utm_medium=share`). Events during a run also carry `level`, `page_number`, `practice` and `seconds_on_page`.
+
+| Event | Sent when | Extra details |
+|---|---|---|
+| Page Viewed | Any page appears: the start screen, each level, the finish screen | `page` (`start`, a level name, or `finish`), `page_title` |
+| Run Started | "Take a Number" is pressed, or a `?level=` test link opens | `levels` (in order), `practice` |
+| Page Completed | A page is accepted | where the player is (see above) |
+| Mistake Made | The player gets something wrong (table below) | `code`, `reason`, plus details per level |
+| Run Finished | The last page is accepted | `total_seconds`, `levels`, `seconds_<level>` for each level |
+| Run Abandoned | Restart is pressed during a run | where the player was |
+| Standards PDF Closed | The address level's PDF is closed | `furthest_page`, `reached_suffix_table` |
+| Initials Submitted | The Board of Ethics review ends | `approved`, `reason` if denied |
+| Share Clicked | Share Score is pressed | `method` (`copy` or `share menu`), `completed` |
+
+### Mistakes
+
+`code` is what the page shows the player (some levels show none). `reason` is a plain description the player never sees.
+
+| Level | Code | Reason sent | Extra details |
+|---|---|---|---|
+| intro | 503-B | Followed a link, which unchecked the terms box | `link`, `box_was_checked` |
+| pin | (none) | Tried to paste the PIN | |
+| pin | PTX-0417 | Left N boxes empty, or Typed a wrong digit | `boxes_empty`, `digits_wrong` |
+| human | (none) | Missed a two-flat / Picked a bungalow, etc. (round 1); Missed an alderman / Picked a governor / Picked a mayor (round 2) | `round`, `missed`, `wrongly_picked`, `try_number` |
+| address | ADR-22 | Typed AVE (the postal abbreviation) instead of AV; or Wrong or empty: (field list) | `wrong_fields`, `suffix_typed` (AV, AVE, AVENUE, blank or other), `county_picked` |
+| sticker | E-101 | Left the plate empty | |
+| sticker | E-102 | Typed the plate with a space or dash | |
+| sticker | E-103 | Typed a plate that does not match the card | |
+| sticker | E-401 | Did not pick a classification | |
+| sticker | E-387 | Left the weight empty | |
+| sticker | E-388 | Typed the gross weight (GVWR), or some other number, instead of the curb weight | `weight_typed` |
+| sticker | E-411 | Picked classification X instead of P | `class_picked` |
+| sticker | E-569 | Did not answer the senior question | |
+| sticker | E-570 | Said yes to the senior rate (owner was born in 1979) | |
+| sticker | E-639 | Did not pick a sticker period | |
+| sticker | E-640 | Picked the 4-month prorated sticker | |
+| sticker | E-641 | Picked the discontinued 24-month sticker | |
+| sticker | E-900 | Did not check the residency box | |
+
+The sticker form shows only the first error it finds, so one submit sends one sticker mistake. The address form checks every field, so one submit sends one mistake listing all wrong fields.
+
 ## Photos
 
 The alderman photos in `public/img/alders/` come from the City of Chicago's Ward Offices dataset (data.cityofchicago.org, dataset `htai-wnw4`). The governor and mayor photos in `public/img/officials/` come from Wikimedia Commons. Names, licenses and sources are in `public/js/officials.js`, and the game shows the credits from the ⓘ button in the picture test. Keep the credits if the game is published.

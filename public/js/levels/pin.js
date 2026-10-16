@@ -53,7 +53,11 @@ Game.register({
 
     inputs.forEach(input => {
       input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(-1); });
-      input.addEventListener('paste', e => { e.preventDefault(); pasteMsg.hidden = false; });
+      input.addEventListener('paste', e => {
+        e.preventDefault();
+        pasteMsg.hidden = false;
+        Game.mistake(null, 'Tried to paste the PIN');
+      });
       input.addEventListener('drop', e => e.preventDefault());
       // Tab (or Shift+Tab) goes to a random other box. One time in eight it goes to Clear Form.
       input.addEventListener('keydown', e => {
@@ -80,6 +84,10 @@ Game.register({
         done();
         return;
       }
+      const typed = inputs.map(i => i.value);
+      const empty = typed.filter(v => v === '').length;
+      const wrongDigits = typed.filter((v, i) => v !== '' && v !== pin[i]).length;
+      Game.mistake('PTX-0417', empty ? `Left ${empty} box${empty === 1 ? '' : 'es'} empty` : 'Typed a wrong digit', { boxes_empty: empty, digits_wrong: wrongDigits });
       err.textContent = 'ERROR PTX-0417: The PIN you entered could not be validated. Please review your entry and try again.';
       err.hidden = false;
       verify.disabled = false;

@@ -16,10 +16,10 @@ Game.register({
         sub: 'Click verify once there are none left.',
         hint: 'A two-flat has exactly two apartments stacked on top of each other. Brick or greystone.',
         build: () => drawnGrid(
-          [() => Art.walkup(2, false), () => Art.walkup(2, true)],
-          [Art.bungalow, Art.cottage, () => Art.walkup(3, false), () => Art.walkup(3, true)],
+          [['brick two-flat', () => Art.walkup(2, false)], ['greystone two-flat', () => Art.walkup(2, true)]],
+          [['bungalow', Art.bungalow], ['cottage', Art.cottage], ['brick three-flat', () => Art.walkup(3, false)], ['greystone three-flat', () => Art.walkup(3, true)]],
           rnd(2, 4),
-          [() => Art.walkup(2, false)].concat(Math.random() < 0.7 ? [() => Art.walkup(2, true)] : []),
+          [['brick two-flat', () => Art.walkup(2, false)]].concat(Math.random() < 0.7 ? [['greystone two-flat', () => Art.walkup(2, true)]] : []),
         ),
       },
       {
@@ -31,10 +31,12 @@ Game.register({
     ];
 
     // 9 drawn tiles: `nYes` correct ones (starting with `mustHave`), the rest wrong.
-    function drawnGrid(yesFns, noFns, nYes, mustHave) {
-      const tiles = mustHave.map(f => ({ art: f(), ok: true }));
-      while (tiles.length < nYes) tiles.push({ art: pick(yesFns)(), ok: true });
-      while (tiles.length < 9) tiles.push({ art: pick(noFns)(), ok: false });
+    // Each choice is [kind, drawing function]; the kind is only used for analytics.
+    function drawnGrid(yes, no, nYes, mustHave) {
+      const tile = ([kind, draw], ok) => ({ kind, ok, art: draw() });
+      const tiles = mustHave.map(c => tile(c, true));
+      while (tiles.length < nYes) tiles.push(tile(pick(yes), true));
+      while (tiles.length < 9) tiles.push(tile(pick(no), false));
       return shuffle(tiles);
     }
 
@@ -47,7 +49,7 @@ Game.register({
       return shuffle([
         ...alders.slice(0, nYes).map(o => ({ o, ok: true })),
         ...wrong.map(o => ({ o, ok: false })),
-      ]).map(({ o, ok }) => ({ ok, label: o.name, art: photo(o) }));
+      ]).map(({ o, ok }) => ({ ok, kind: o.role, label: o.name, art: photo(o) }));
     }
 
     function photo(o) {
@@ -99,6 +101,12 @@ Game.register({
     function verify() {
       const picked = [...chal.querySelectorAll('.cap-tile')].map(b => b.classList.contains('sel'));
       if (picked.some((sel, i) => sel !== tiles[i].ok)) {
+        const missed = tiles.filter((t, i) => t.ok && !picked[i]).map(t => t.kind);
+        const wrong = tiles.filter((t, i) => !t.ok && picked[i]).map(t => t.kind);
+        const what = round === 0 ? 'two-flat' : 'alderman';
+        const reason = [missed.length ? `Missed ${missed.length === 1 ? `a ${what}` : `${missed.length} ${what}s`}` : '',
+          wrong.length ? `Picked ${[...new Set(wrong)].map(k => `a ${k}`).join(' and ')}` : ''].filter(Boolean).join('; ');
+        Game.mistake(null, reason, { round: round + 1, round_prompt: ROUNDS[round].prompt, missed, wrongly_picked: wrong, try_number: fails[round] + 1 });
         fails[round]++;
         showRound('Please try again.');
         return;
