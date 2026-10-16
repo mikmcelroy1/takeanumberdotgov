@@ -17,6 +17,27 @@ function trackingEnv(hostname, search) {
   return local && new URLSearchParams(search).get('track') === '1' ? 'local' : null;
 }
 
+// Where this visit came from, worked out once per page load and attached to every event as
+// traffic_source. Checked in this order: our share link, social, search, any other utm_medium tag,
+// no referring site (direct), any other referring site. Many social apps hide the referring site,
+// so links posted on social media should carry ?utm_medium=social (and utm_source=<site>).
+const SOCIAL_SITES = /(^|\.)(t\.co|twitter\.com|x\.com|facebook\.com|fb\.com|instagram\.com|reddit\.com|linkedin\.com|lnkd\.in|threads\.net|bsky\.app|tiktok\.com|youtube\.com|news\.ycombinator\.com)$|mastodon/;
+const SEARCH_SITES = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia|kagi|baidu)\./;
+
+function trafficSource(search, referrer, ownHost) {
+  const medium = (new URLSearchParams(search).get('utm_medium') || '').toLowerCase();
+  let site = '';
+  try { site = referrer ? new URL(referrer).hostname.toLowerCase().replace(/^www\./, '') : ''; } catch {}
+  if (site === ownHost) site = '';
+  const source = medium === 'share' ? 'Shared score link'
+    : medium === 'social' || SOCIAL_SITES.test(site) ? 'Social'
+    : SEARCH_SITES.test(site) ? 'Search'
+    : medium ? 'Other campaign'
+    : !site ? 'Direct'
+    : 'Other website';
+  return { traffic_source: source, referring_site: site || '(none)' };
+}
+
 const Analytics = {
   enabled: false,
 
@@ -38,7 +59,7 @@ const Analytics = {
       persistence: 'localStorage',
       track_pageview: false, // the game is one page; "Page Viewed" is sent for each game page instead
     });
-    mixpanel.register({ env });
+    mixpanel.register({ env, ...trafficSource(location.search, document.referrer, LIVE_HOST) });
   },
 
   track(event, props = {}) {

@@ -72,7 +72,7 @@ The new level is then in the random pool automatically.
 
 Events go to the Mixpanel project **take-a-number** (id 4074309). The browser loads Mixpanel's library from `public/js/vendor/` and sends events to `/mp/...` on this site, which `src/index.js` forwards to Mixpanel, so ad blockers don't drop them. Events are only sent from takeanumberdotgov.com (`LIVE_HOST` in `public/js/analytics.js`), so a copy of this code running anywhere else sends nothing. To test on localhost, add `?track=1` to the address; those events are tagged `env = local`, live ones `env = live`. Nothing the player types is ever sent.
 
-Every event carries Mixpanel's automatic details (browser, device, city and country, the page address, and any `utm_` tags such as `utm_medium=share`). Events during a run also carry `level`, `page_number`, `practice` and `seconds_on_page`.
+Every event carries Mixpanel's automatic details (browser, device, city and country, the page address, and any `utm_` tags such as `utm_medium=share`), plus `traffic_source` (Shared score link, Social, Search, Other campaign, Direct or Other website) and `referring_site`, worked out once per page load by `trafficSource()` in `public/js/analytics.js`. Many social apps hide the referring site, so when posting the game on social media, use a link like `https://takeanumberdotgov.com/?utm_source=reddit&utm_medium=social`. Events during a run also carry `level`, `page_number`, `practice` and `seconds_on_page`.
 
 | Event | Sent when | Extra details |
 |---|---|---|
