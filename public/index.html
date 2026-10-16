@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Please Take a Number</title>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+
+<div id="gamebar">
+  <div class="gb-title">PLEASE TAKE A NUMBER</div>
+  <div class="gb-level" id="gb-level"></div>
+  <div class="gb-right">
+    <span id="timer">00:00.0</span>
+    <button id="restart" type="button">Restart</button>
+  </div>
+</div>
+
+<div id="gov">
+  <header class="gov-header">
+    <svg class="seal" viewBox="0 0 100 100" width="64" height="64" aria-hidden="true">
+      <defs><path id="sealArc" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0"/></defs>
+      <circle cx="50" cy="50" r="48" fill="#f2e6c4" stroke="#8a6d22" stroke-width="3"/>
+      <circle cx="50" cy="50" r="29" fill="none" stroke="#8a6d22" stroke-width="1.5"/>
+      <text font-size="7.4" font-family="Georgia,serif" fill="#5a4410" letter-spacing=".6"><textPath href="#sealArc">OFFICE OF THE CLERK OF FORMS · EST. 1871 ·</textPath></text>
+      <text x="50" y="48" text-anchor="middle" font-size="10" font-family="Georgia,serif" fill="#5a4410">FORM</text>
+      <text x="50" y="60" text-anchor="middle" font-size="10" font-family="Georgia,serif" fill="#5a4410">No. 1</text>
+    </svg>
+    <div class="gov-names">
+      <div class="gov-office">Office of the Clerk of Forms</div>
+      <div class="gov-sub">Consolidated Department of Applications, Permits, Stickers &amp; Related Matters</div>
+    </div>
+    <div class="gov-hours">Office Hours: Mon–Fri 8:30 AM – 4:30 PM<br>(Closed 12:00 – 1:00 PM)</div>
+  </header>
+  <nav class="gov-nav">
+    <a href="#">Home</a><a href="#">Residents</a><a href="#">Businesses</a><a href="#">Property Taxes</a><a href="#">Pay a Bill</a><a href="#">FOIA</a><a href="#">Contact Us</a>
+  </nav>
+  <div class="gov-notice" id="notice"></div>
+  <div class="gov-crumbs" id="crumbs"></div>
+  <main id="page"></main>
+  <footer class="gov-footer">
+    © 2011 Office of the Clerk of Forms. All rights reserved. Last updated 03/14/2011.
+    <a href="#">Accessibility</a> | <a href="#">Privacy Policy (PDF)</a> | <a href="#">Site Map (PDF)</a><br>
+    This site is best viewed in Internet Explorer 8 at 1024 × 768.
+    <div class="parody">Parody game. The Office of the Clerk of Forms is made up and is not connected to any real government office.</div>
+  </footer>
+</div>
+
+<script src="js/officials.js"></script>
+<script src="js/art.js"></script>
+<script src="js/game.js"></script>
+<script src="js/levels/intro.js"></script>
+<script src="js/levels/pin.js"></script>
+<script src="js/levels/captcha.js"></script>
+<script src="js/levels/address.js"></script>
+<script src="js/levels/sticker.js"></script>
+<script src="js/finish.js"></script>
+<script>Game.boot();</script>
+</body>
+</html>

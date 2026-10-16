@@ -1,0 +1,13 @@
+{
+  "name": "takeanumber",
+  "private": true,
+  "description": "Please Take a Number: a timed game of deliberately bad government web pages.",
+  "scripts": {
+    "dev": "wrangler pages dev --port 8788",
+    "db:local": "wrangler d1 execute takeanumber-scores --local --file schema.sql",
+    "db:remote": "wrangler d1 execute takeanumber-scores --remote --file schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.1"
+  }
+}
