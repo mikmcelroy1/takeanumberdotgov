@@ -2,12 +2,12 @@
 
 A timed game of deliberately bad government web pages. Plain HTML and JavaScript, no build step.
 
-Live at https://takeanumberdotgov.com (once deployed). Hosted on Cloudflare Pages; the scoreboard is a Cloudflare D1 database.
+Live at https://takeanumberdotgov.com (once deployed). Hosted as a Cloudflare Worker; the scoreboard is a Cloudflare D1 database. Every push to `main` on GitHub rebuilds and updates the live site.
 
 ## Folders
 
 - `public/` is the website itself: everything in it is published.
-- `functions/api/scores.js` is the scoreboard script. Cloudflare runs it at `/api/scores`.
+- `src/index.js` is the Worker: it sends `/api/scores` to the scoreboard (`src/scores.js`) and serves everything else from `public/`.
 - `schema.sql` creates the scoreboard table. `wrangler.toml` holds the Cloudflare settings.
 
 ## Run it locally
@@ -30,7 +30,7 @@ Then open http://localhost:8731. The leaderboard falls back to a list kept in yo
 
 ## Scoreboard rules
 
-`functions/api/scores.js` only saves a score if the initials are 3 capital letters, the time is between 20 seconds and 2 hours, and the level list is a real run (4 different levels, Before You Begin first). Each visitor can post 5 scores a minute. IP addresses are only stored in scrambled form, for that limit. Times are measured in the player's browser, so these checks stop junk, not a determined cheater. If you change `RANDOM_LEVELS`, change `PAGES_PER_RUN` in the scoreboard script to match.
+`src/scores.js` only saves a score if the initials are 3 capital letters, the time is between 20 seconds and 2 hours, and the level list is a real run (4 different levels, Before You Begin first). Each visitor can post 5 scores a minute. IP addresses are only stored in scrambled form, for that limit. Times are measured in the player's browser, so these checks stop junk, not a determined cheater. If you change `RANDOM_LEVELS`, change `PAGES_PER_RUN` in the scoreboard script to match.
 
 ## How a run works
 

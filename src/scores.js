@@ -1,4 +1,4 @@
-// Scoreboard for the game, run by Cloudflare Pages Functions at /api/scores.
+// Scoreboard for the game, called by src/index.js for requests to /api/scores.
 //   GET  /api/scores   returns the 10 fastest runs: [{ name, ms, created_at }]
 //   POST /api/scores   adds one run: { name: "ABC", ms: 123456, levels: "intro,pin,human,sticker" }
 // Scores live in the Cloudflare D1 database connected as DB (see wrangler.toml and schema.sql).

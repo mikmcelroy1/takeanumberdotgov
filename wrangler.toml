@@ -1,7 +1,12 @@
-# Cloudflare Pages settings. The site is the public/ folder; functions/ holds the scoreboard API.
+# Cloudflare Worker settings. The Worker in src/index.js answers /api/scores; the files in
+# public/ are the website. "name" must match the Worker's name in the Cloudflare dashboard.
 name = "takeanumber"
-pages_build_output_dir = "public"
+main = "src/index.js"
 compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
