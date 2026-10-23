@@ -1,6 +1,9 @@
 // Sends game events to Mixpanel (project "take-a-number").
 // - The Mixpanel library is served from this site (js/vendor/), and events go to /mp on this site,
 //   which src/index.js forwards to Mixpanel. Ad blockers block Mixpanel's own addresses, not ours.
+// - Mixpanel's default sending address ends in /track/?verbose=..., which the EasyPrivacy block list
+//   (used by uBlock Origin, Brave and others) blocks on any site. MIXPANEL_ROUTES renames the
+//   addresses to /mp/e/, /mp/u/ and /mp/g/; src/index.js maps them back. Keep the two lists in step.
 // - Events are only sent from LIVE_HOST, so copies of this code running anywhere else send nothing.
 //   For testing on localhost, add ?track=1 to the address; those events are tagged env=local.
 // - The project token below is meant to be public: it can add events, but cannot read or delete data.
@@ -9,6 +12,10 @@
 const MIXPANEL_TOKEN = '603f7c2a604772853ef951a1937a43b2';
 const MIXPANEL_LIB = '/js/vendor/mixpanel-2.84.0.min.js';
 const LIVE_HOST = 'takeanumberdotgov.com';
+const MIXPANEL_ROUTES = {
+  track: 'e/', engage: 'u/', groups: 'g/', // renamed (see above)
+  record: 'record/', flags: 'flags/', settings: 'settings/', // Mixpanel's defaults, unused by this game
+};
 
 // 'live', 'local', or null for "send nothing".
 function trackingEnv(hostname, search) {
@@ -56,6 +63,7 @@ const Analytics = {
 
     mixpanel.init(MIXPANEL_TOKEN, {
       api_host: `${location.origin}/mp`,
+      api_routes: MIXPANEL_ROUTES,
       persistence: 'localStorage',
       track_pageview: false, // the game is one page; "Page Viewed" is sent for each game page instead
     });

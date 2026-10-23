@@ -25,10 +25,16 @@ export default {
   },
 };
 
-// Sends /mp/track/?... to https://api-js.mixpanel.com/track/?... and returns Mixpanel's answer.
+// The game sends to short names so ad blockers don't recognize them (see MIXPANEL_ROUTES in
+// public/js/analytics.js). This maps them back to Mixpanel's real addresses. Anything else under /mp/
+// is passed through unchanged, so pages loaded before this change still work.
+const MIXPANEL_PATHS = { e: 'track', u: 'engage', g: 'groups' };
+
+// Sends /mp/e/?... to https://api-js.mixpanel.com/track/?... and returns Mixpanel's answer.
 // X-Real-IP tells Mixpanel the visitor's IP so it can work out their city and country.
 async function forwardToMixpanel(request, url) {
-  const target = MIXPANEL + url.pathname.slice('/mp'.length) + url.search;
+  const [first, ...rest] = url.pathname.slice('/mp/'.length).split('/');
+  const target = `${MIXPANEL}/${[MIXPANEL_PATHS[first] ?? first, ...rest].join('/')}${url.search}`;
   const headers = new Headers();
   for (const name of ['content-type', 'user-agent', 'accept']) {
     const value = request.headers.get(name);
